@@ -96,10 +96,10 @@ def plot_data(style='split', args=[], subplot=0):
 
     filename = 'Galactic_Underworld'
 
-    # extinct_filename = r'galaxia_f1e-4_bhm2.35.ebf'
-    extinct_filename = r'galaxia_f1e-3_bhm2.35.ebf'
-    # if kicked_filename is None: kicked_filename= r'kicked_remnants.csv'
-    stellar_filename = r'milkyway_f1e-6.ebf'
+    # extinct_filename = r'../galaxia_f1e-4_bhm2.35.ebf'
+    extinct_filename = r'../galaxia_f1e-3_bhm2.35.ebf'
+    # if kicked_filename is None: kicked_filename= r'../kicked_remnants.csv'
+    stellar_filename = r'../milkyway_f1e-6.ebf'
 
     distance = np.inf
     # if kicked:
@@ -371,7 +371,7 @@ def plot_data(style='split', args=[], subplot=0):
             df = df[df['age'] <= float_args[0]]
 
         # Convert to Local Standard of Rest
-        vcirc_data = np.genfromtxt('vcirc_potential.csv', dtype=None, names=True, delimiter=',') # load vcirc data
+        vcirc_data = np.genfromtxt('../vcirc_potential.csv', dtype=None, names=True, delimiter=',') # load vcirc data
 
         # For integrated remnants
         vcirc = np.interp(df['R'], vcirc_data['r'], vcirc_data['vcirc'])  # circular velocity at the location of a star rgc
@@ -710,8 +710,8 @@ def plot_data(style='split', args=[], subplot=0):
     if not subplot:
         print('Saving plots with filename:', filename)
         plt.tight_layout()
-        plt.savefig(f'{filename}.pdf')
-        plt.savefig(f'{filename}.png', dpi=512)
+        plt.savefig(f'../{filename}.pdf')
+        plt.savefig(f'../{filename}.png', dpi=512)
         # plt.show()
         plt.close()
 
@@ -750,11 +750,11 @@ def calculate_nearest(extinct_coords, radius, centre, method='torus', undersampl
 def calculate_density(kicked=True, radius=100):
     # radius is in pc
     if kicked:
-        # extinct_filename = r'kicked_remnants.csv'
+        # extinct_filename = r'../kicked_remnants.csv'
         extinct_filename = kicked_filename
     else:
-        # extinct_filename = r'galaxia_f1e-4_bhm2.35.ebf'
-        extinct_filename = r'galaxia_f1e-3_bhm2.35.ebf'
+        # extinct_filename = r'../galaxia_f1e-4_bhm2.35.ebf'
+        extinct_filename = r'../galaxia_f1e-3_bhm2.35.ebf'
 
     min_masses = [8, 8, 20]
     max_masses = [np.inf, 20, np.inf]
@@ -767,7 +767,7 @@ def calculate_density(kicked=True, radius=100):
     print(f'The sun is located at {centre*1e3} pc.')
 
     _, _, _ = load_data(raw_kicked_filename, min_mass=8, distance=np.inf)
-    stellar_filename = r'milkyway_f1e-6.ebf'
+    stellar_filename = r'../milkyway_f1e-6.ebf'
     stellar_coords, centre, _ = load_data(stellar_filename, min_mass=0, number_of_stars=None, distance=np.inf)
     nearest_star = calculate_nearest(stellar_coords, radius, centre, undersample=1e6)
     print(f'For comparison, the nearest star is {nearest_star:.2f} pc away.')
@@ -801,7 +801,7 @@ def calculate_scale_dimension(method='exponential', dimension='height', verbose=
     # _, _, number_of_stars = load_data(kicked_filename, min_mass=8, distance=distance)
     _, _, number_of_stars = load_data(raw_kicked_filename, min_mass=8, distance=distance)
 
-    stellar_filename = r'milkyway_f1e-6.ebf'
+    stellar_filename = r'../milkyway_f1e-6.ebf'
     # stellar_coords, centre = load_data(stellar_filename, min_mass=0, number_of_stars=number_of_stars, distance=distance)
     stellar_coords, centre, _ = load_data(stellar_filename, min_mass=0, distance=distance)
     df_extinct = pd.read_csv(kicked_filename)
@@ -816,7 +816,7 @@ def calculate_scale_dimension(method='exponential', dimension='height', verbose=
         plt.plot(stellar_z[:, 1], label='Stellar')
         plt.plot(extinct_z[:, 1], label='Dark')
         plt.legend()
-        plt.savefig('Galactic_cross_section.png')
+        plt.savefig('../Galactic_cross_section.png')
 
         stellar_z = stellar_z[np.argmax(stellar_z[:, 1]):, 1]
         extinct_z = extinct_z[np.argmax(extinct_z[:, 1]):, 1]
@@ -925,17 +925,17 @@ def create_subplots(subplot = 'speed_histogram'):
 
     if subplot == 'speed_histogram':
         plt.figure(figsize=(6.4, 4.8*1.5))
-        raw_kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib_0myr.csv'
+        raw_kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib_0myr.csv'
         plot_data(style='speed', args=['histogram', 'young'], subplot=311)
-        kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_final.csv'
+        kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_final.csv'
         plot_data(style='speed', args=['histogram', 'all'], subplot=312)
-        kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_peter_25myr.csv'
+        kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_peter_25myr.csv'
         plot_data(style='speed', args=['histogram', 'all', 'sample'], subplot=313)
         plt.title('Velocity Distribution of Sampled Neutron Stars')
         plt.tight_layout()
         print('Saving Galactic_Underworld_speed_histograms')
-        plt.savefig('Galactic_Underworld_speed_histograms_25myr.pdf')
-        plt.savefig('Galactic_Underworld_speed_histograms_25myr.png', dpi=512)
+        plt.savefig('../Galactic_Underworld_speed_histograms_25myr.pdf')
+        plt.savefig('../Galactic_Underworld_speed_histograms_25myr.png', dpi=512)
     elif subplot == 'contours':
         plt.figure(figsize=(6.4*2, 4.8*2))
         plot_data(style='contour', args=[20, 'visible', 'lines'], subplot=221)
@@ -944,65 +944,65 @@ def create_subplots(subplot = 'speed_histogram'):
         plot_data(style='contour', args=[20, 'renzo', 'type', 'lines'], subplot=224)
         plt.tight_layout()
         print('Saving Galactic_Underworld_contour_comparison')
-        plt.savefig('Galactic_Underworld_contour_comparison.pdf')
-        plt.savefig('Galactic_Underworld_contour_comparison.png', dpi=512)
+        plt.savefig('../Galactic_Underworld_contour_comparison.pdf')
+        plt.savefig('../Galactic_Underworld_contour_comparison.png', dpi=512)
     elif subplot == 'sanjib_evolution':
         plt.figure(figsize=(6.4, 15))
-        kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib_0myr.csv'
+        kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib_0myr.csv'
         plot_data(style='speed', args=['histogram', 'all'], subplot=511)
         plt.title('Unevolved NSs')
-        kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib.csv'
+        kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib.csv'
         plot_data(style='speed', args=['histogram', 'all', 0.01], subplot=512)
         plt.title('NSs evolved for 10 Myr')
-        kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib.csv'
+        kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib.csv'
         plot_data(style='speed', args=['histogram', 'all', 0.025], subplot=513)
         plt.title('NSs evolved for 25 Myr')
-        kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib.csv'
+        kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib.csv'
         plot_data(style='speed', args=['histogram', 'all', 0.05], subplot=514)
         plt.title('NSs evolved for 50 Myr')
-        kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib.csv'
+        kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_sanjib.csv'
         plot_data(style='speed', args=['histogram', 'all', 0.1], subplot=515)
         plt.title('NSs evolved for 100 Myr')
         plt.tight_layout()
         print('Saving Galactic_Underworld_speed_histograms_for_sanjib_filter')
-        plt.savefig('Galactic_Underworld_speed_histograms_for_sanjib_filter.pdf')
-        plt.savefig('Galactic_Underworld_speed_histograms_for_sanjib_filter.png', dpi=512)
+        plt.savefig('../Galactic_Underworld_speed_histograms_for_sanjib_filter.pdf')
+        plt.savefig('../Galactic_Underworld_speed_histograms_for_sanjib_filter.png', dpi=512)
     elif subplot == 'peter_evolution':
         cuts = [1, 10, 25, 50, 100, 200]
         plt.figure(figsize=(6.4, 2.4*len(cuts)))
         for i, cut in enumerate(cuts):
             subplot_num = int(str(len(cuts)) + '1' + str(i+1))
-            kicked_filename = f'kicked_remnants_igoshev_young_7.8_DC_integrated_peter_{cut}myr.csv'
+            kicked_filename = f'../kicked_remnants_igoshev_young_7.8_DC_integrated_peter_{cut}myr.csv'
             plot_data(style='speed', args=['histogram', 'all', 'sample'], subplot=subplot_num)
             plt.title(f'NSs evolved for {cut} Myr')
 
         plt.tight_layout()
         print('Saving Galactic_Underworld_speed_histograms_for_peter_1-200myr_filter')
-        plt.savefig('Galactic_Underworld_speed_histograms_for_peter_1-200myr_filter.pdf')
-        plt.savefig('Galactic_Underworld_speed_histograms_for_peter_1-200myr_filter.png', dpi=512)
+        plt.savefig('../Galactic_Underworld_speed_histograms_for_peter_1-200myr_filter.pdf')
+        plt.savefig('../Galactic_Underworld_speed_histograms_for_peter_1-200myr_filter.png', dpi=512)
 
     elif subplot == 'hobbs':
         kicked_filename = hobbs_filename
         plot_data(style='contour', args=[20, 'type', 'lines'], subplot=111)
         plt.tight_layout()
         print('Saving Galactic_Underworld_contour_hobbs')
-        plt.savefig('Galactic_Underworld_contour_hobbs.pdf')
-        plt.savefig('Galactic_Underworld_contour_hobbs.png', dpi=512)
+        plt.savefig('../Galactic_Underworld_contour_hobbs.pdf')
+        plt.savefig('../Galactic_Underworld_contour_hobbs.png', dpi=512)
     else:
         raise ValueError(f'Unknown subplot: {subplot}')
     kicked_filename, raw_kicked_filename = old_kicked, old_raw
 
 
-# kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated.csv'
-# kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_2.csv'
-kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_integrated_final.csv'
-renzo_filename = r'kicked_remnants_renzo_integrated_final.csv'
-hobbs_filename = r'kicked_remnants_hobbs_integrated.csv'
-# unkicked_filename = r'kicked_remnants_no_kick.csv'
-unkicked_filename = r'kicked_remnants_no_kick_final.csv'
-# raw_kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC.csv'
-raw_kicked_filename = r'kicked_remnants_igoshev_young_7.8_DC_final.csv'
-# raw_kicked_filename = r'kicked_remnants_renzo.csv'
+# kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated.csv'
+# kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_2.csv'
+kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_final.csv'
+renzo_filename = r'../kicked_remnants_renzo_integrated_final.csv'
+hobbs_filename = r'../kicked_remnants_hobbs_integrated.csv'
+# unkicked_filename = r'../kicked_remnants_no_kick.csv'
+unkicked_filename = r'../kicked_remnants_no_kick_final.csv'
+# raw_kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC.csv'
+raw_kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_final.csv'
+# raw_kicked_filename = r'../kicked_remnants_renzo.csv'
 kicked = True
 
 # create_subplots('speed_histogram')
