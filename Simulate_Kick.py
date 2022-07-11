@@ -25,7 +25,7 @@ def calculate_lifetimes(df):
 
 def load_data(filename, filter=True):
     # Load Galaxia data into DataFrame
-    data = ebf.read(filename, '/')
+    data = ebf.read(filename, '../')
     centre = np.array(data['center'])
     keys = ['px', 'py', 'pz', 'vx', 'vy', 'vz', 'age', 'smass', 'feh', 'popid']
     useful_data = []
