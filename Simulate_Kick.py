@@ -17,7 +17,7 @@ def calculate_lifetimes(df):
 
     Adapted from code provided by Sanjib Sharma.
     '''
-    with open('stellar_lifetime.pkl', 'rb') as handle:
+    with open('../stellar_lifetime.pkl', 'rb') as handle:
         stellar_lifetimes = pickle.load(handle)
     stellar_properties = np.array([np.clip(df['feh'], a_min=-2, a_max=0.49), df['smass']]).T
     df['lifetime'] = 10**stellar_lifetimes(stellar_properties) / 10**9
@@ -226,8 +226,8 @@ def create_velocity_plot():
     plt.xlabel('Velocity (km/s)'); plt.ylabel('Counts/Arbitrary')
     plt.title('Comparison of Velocity Distributions')
     # plt.show()
-    plt.savefig('velocities_igoshev_all.png')
-    plt.savefig('velocities_igoshev_all.pdf')
+    plt.savefig('../velocities_igoshev_all.png')
+    plt.savefig('../velocities_igoshev_all.pdf')
 
 
 MAX_VELOCITY = 1500
@@ -236,7 +236,7 @@ PDF = kick_distribution
 DISTRIBUTION = 'igoshev_young'
 # DISTRIBUTION = 'hobbs'
 # extinct_filename = r'galaxia_f1e-4_bhm2.35.ebf'
-extinct_filename = r'galaxia_f1e-3_bhm2.35.ebf'
+extinct_filename = r'galaxia_f1e-3_bhm2.35.ebf' # Folder location is taken care of in the loading of this file
 np.random.seed(0)
 
 if __name__ == '__main__':
@@ -245,15 +245,15 @@ if __name__ == '__main__':
     # df = add_kicks(df, half=False, verbose=1)
     # df = update_cylindrical_coords(df)
     # df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-    # # df.to_csv('kicked_remnants_no_kick_final.csv')
-    # # df.to_csv(f'kicked_remnants_{DISTRIBUTION}.csv')
-    # # df.to_csv(f'kicked_remnants_{DISTRIBUTION}_final.csv')
-    # df.to_csv(f'kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
-    # # df = pd.read_csv(f'kicked_remnants_{DISTRIBUTION}.csv')
-    # # df = pd.read_csv(f'kicked_remnants_{DISTRIBUTION}_final.csv')
+    # # df.to_csv('../kicked_remnants_no_kick_final.csv')
+    # # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}.csv')
+    # # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_final.csv')
+    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
+    # # df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}.csv')
+    # # df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}_final.csv')
 
     # for cut in [1, 10, 25, 50, 100, 200]:
-    df = pd.read_csv(f'kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
+    df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
 
     # # For recent galaxy
     # df = df.query('age < 2')
@@ -289,9 +289,9 @@ if __name__ == '__main__':
 
     print('Total sources:', len(df))
 
-    # df.to_csv('kicked_remnants_no_kick_integrated.csv')
-    # df.to_csv(f'kicked_remnants_{DISTRIBUTION}_integrated.csv')
-    # df.to_csv(f'kicked_remnants_{DISTRIBUTION}_integrated_final.csv')
-    # df.to_csv(f'kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN.csv')
-    # df.to_csv(f'kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_peter_{cut}myr.csv')
-    df.to_csv(f'kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_magnetars.csv')
+    # df.to_csv('../kicked_remnants_no_kick_integrated.csv')
+    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_integrated.csv')
+    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_integrated_final.csv')
+    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN.csv')
+    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_peter_{cut}myr.csv')
+    df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_magnetars.csv')
