@@ -105,9 +105,6 @@ def get_kick(black_hole=False, half=False, heavy=False):
     return x, y, z, ECSN
 
 def add_kicks(df, verbose=0, half=False):
-    # print(len(df[df['smass'] > 40]))
-    # print(len(df[df['rtype'] == 'Black Hole']))
-
     for prog, i in enumerate(df.index.values):
         if verbose and prog % (df.shape[0]//100) == 0:
             print(f'Creating kicks, progress = {100 * prog / df.shape[0]:.0f}%')
@@ -128,6 +125,7 @@ def add_kicks(df, verbose=0, half=False):
     return df
 
 def update_cylindrical_coords(df):
+    '''Updates the cylindrical coordinates based on values of the cartesian coordinates'''
     x = df['px']
     y = df['py']
     vx = df['vx']
@@ -140,6 +138,7 @@ def update_cylindrical_coords(df):
     return df
 
 def update_cartestian_coordinates(df):
+    '''Updates the cartestian coordinates based on values of the cylindrical coordinates'''
     R = df['R']
     phi = df['phi']
     vR = df['vR']

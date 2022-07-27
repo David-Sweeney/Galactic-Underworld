@@ -859,6 +859,7 @@ def calculate_scale_dimension(method='exponential', dimension='height', verbose=
             stellar_radii = np.sqrt(np.sum(stellar_coords[:, :2]**2, axis=1))
             stellar_z = stellar_coords[(stellar_radii > min_rad) & (stellar_radii < max_rad)][:, 2]
             df_guw = pd.read_csv(kicked_filename)
+            # df_guw = pd.read_csv(unkicked_filename)
             # df_guw = pd.read_csv(hobbs_filename)
             df_guw = df_guw[(df_guw['R'] > min_rad) & (df_guw['R'] < max_rad)]
             ns_z = df_guw[df_guw['rtype'] == 'Neutron Star']['pz']
@@ -885,6 +886,7 @@ def calculate_scale_dimension(method='exponential', dimension='height', verbose=
             stellar_radii = np.sqrt(np.sum(stellar_coords[:, :2]**2, axis=1))
             stellar_radii = stellar_radii[np.abs(stellar_coords[:, 2]) < max_z]
             df_guw = pd.read_csv(kicked_filename)
+            # df_guw = pd.read_csv(unkicked_filename)
             # df_guw = pd.read_csv(hobbs_filename)
             df_guw = df_guw[np.abs(df_guw['pz']) < max_z]
             ns_r = df_guw[df_guw['rtype'] == 'Neutron Star']['R']
@@ -1046,7 +1048,7 @@ kicked = True
 # plot_data(style='contour', args=[20, 'lines'])
 # plot_data(style='contour', args=[20, 'lines', 'type', 'unkicked'])
 # plot_data(style='contour', args=[20, 'type', 'velocity'])
-plot_data(style='contour', args=[20, 'type', 'unkicked', 'lines'])
+# plot_data(style='contour', args=[20, 'type', 'unkicked', 'lines'])
 
 # plot_data(style='bar', args=[])
 # plot_data(style='bar', args=['R'])
