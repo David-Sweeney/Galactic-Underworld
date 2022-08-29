@@ -24,7 +24,7 @@ def calculate_lifetimes(df):
     return df
 
 def load_data(filename, filter=True):
-    # Load Galaxia data into DataFrame
+    '''Load Galaxia data into DataFrame'''
     data = ebf.read(filename, '../')
     centre = np.array(data['center'])
     keys = ['px', 'py', 'pz', 'vx', 'vy', 'vz', 'age', 'smass', 'feh', 'popid']
@@ -40,7 +40,6 @@ def load_data(filename, filter=True):
     df = calculate_lifetimes(df)
 
     # Make data centred on galactic centre
-    # df.iloc[:, :6] += centre
     df.loc[:, ['px', 'py', 'pz', 'vx', 'vy', 'vz']] += centre
 
     # Add rtype column which specifies remnant type
@@ -71,6 +70,7 @@ def calculate_max_pdf():
     # print(f'Maximum value of PDF: {MAX_PDF:.5f}')
 
 def get_kick(black_hole=False, half=False, heavy=False):
+    '''Sample a kick from the PDF distribution'''
     if MAX_PDF is None: calculate_max_pdf()
     ECSN = False
 
@@ -88,14 +88,11 @@ def get_kick(black_hole=False, half=False, heavy=False):
                 chance_ECSN = PDF(natal_kick, distribution=DISTRIBUTION+'_weighted_ECSN') / PDF(natal_kick, distribution=DISTRIBUTION)
 
                 if black_hole:
-                    # natal_kick *= 0.135
                     natal_kick *= 0.173
                 if half:
                     natal_kick *= np.random.uniform() > get_kick_weight(distribution=DISTRIBUTION)
                 if np.random.uniform() < chance_ECSN:
                     ECSN = True
-
-
 
     # Convert natal kick into (x, y, z) using the Muller method
     u, v, w = np.random.normal(0, 1, size=3)
@@ -105,6 +102,7 @@ def get_kick(black_hole=False, half=False, heavy=False):
     return x, y, z, ECSN
 
 def add_kicks(df, verbose=0, half=False):
+    '''Add kick to each entry of the DataFrame'''
     for prog, i in enumerate(df.index.values):
         if verbose and prog % (df.shape[0]//100) == 0:
             print(f'Creating kicks, progress = {100 * prog / df.shape[0]:.0f}%')
@@ -152,7 +150,7 @@ def update_cartestian_coordinates(df):
     return df
 
 def get_final_locations(df, timesteps):
-    # ages = np.array(df['age']).reshape(-1, 1)
+    '''Retrieves the final location of the remnant from galpy output'''
     ages = np.array(df['age'] - df['lifetime']).reshape(-1, 1)
     timesteps = timesteps.reshape(1, -1)
     timesteps = np.repeat(timesteps, ages.shape[0], axis=0)
@@ -162,7 +160,7 @@ def get_final_locations(df, timesteps):
     return final_args
 
 def calculate_orbits(df, duration=None):
-    # [R, vR, vT, z, vz, phi]
+    '''Calculate the orbit of each remnant in df'''
     ro, vo = 8.0, 232.0
     remnant_starts = np.array(df[['R', 'vR', 'vT', 'pz', 'vz', 'phi']])
     conversion_to_natural_units = np.array([ro, vo, vo, ro, vo, 1])
@@ -201,34 +199,8 @@ def calculate_orbits(df, duration=None):
         df[['R', 'vR', 'vT', 'pz', 'vz', 'phi']] = orbit_values[final_orbits]
     return update_cartestian_coordinates(df)
 
-def create_velocity_plot():
-    # kicks = [] # make this a global variable
-    # And append natal kicks to this list
-
-    df = load_data(extinct_filename)
-    df = df[df['rtype'] == 'Neutron Star']
-    df['velocity'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1))
-    plt.hist(df['velocity'], bins=50, alpha=0.5, label='Original velocities')
-    df = add_kicks(df, verbose=1)
-    df = update_cylindrical_coords(df)
-
-    plt.hist(kicks, bins=50, alpha=0.5, label='Kicks')
-    xs = np.linspace(0, 1500, 1501)
-    plt.plot(xs, kick_distribution(xs, distribution=DISTRIBUTION)/MAX_PDF * 2500, label='Distribution')
-    # plt.show()
-
-    df = update_cartestian_coordinates(df)
-    df['velocity'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1))
-
-    plt.hist(df['velocity'], bins=50, alpha=0.5, label='Kicked velocities')
-    plt.legend(loc='upper right')
-    plt.xlabel('Velocity (km/s)'); plt.ylabel('Counts/Arbitrary')
-    plt.title('Comparison of Velocity Distributions')
-    # plt.show()
-    plt.savefig('../velocities_igoshev_all.png')
-    plt.savefig('../velocities_igoshev_all.pdf')
-
-
+ # Max velocity to try sampling from PDF distribution
+ # In practice velocities this large have ~0 probability of being drawn
 MAX_VELOCITY = 1500
 MAX_PDF = None
 PDF = kick_distribution
@@ -239,17 +211,12 @@ extinct_filename = r'galaxia_f1e-3_bhm2.35.ebf' # Folder location is taken care 
 np.random.seed(0)
 
 if __name__ == '__main__':
-    # df = load_data(extinct_filename)
-    # df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-    # df = add_kicks(df, half=False, verbose=1)
-    # df = update_cylindrical_coords(df)
-    # df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-    # # df.to_csv('../kicked_remnants_no_kick_final.csv')
-    # # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}.csv')
-    # # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_final.csv')
-    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
-    # # df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}.csv')
-    # # df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}_final.csv')
+    df = load_data(extinct_filename)
+    df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+    df = add_kicks(df, half=False, verbose=1)
+    df = update_cylindrical_coords(df)
+    df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+    df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
 
     # for cut in [1, 10, 25, 50, 100, 200]:
     df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
@@ -258,21 +225,15 @@ if __name__ == '__main__':
     # df = df.query('age < 2')
     # df['age'] = (df['age'] - df['lifetime']) % (cut*1e-3)
 
-    # For Magnetars
-    df['age'] = (df['age'] - df['lifetime'])
-    df = df.query('age < 1')
-    df['age'] = df['age'] % (1e-5) # Evolve magnetars for 10,000 years
-    df['lifetime'] = 0
+    # # Work around to calculate magnetar statistics
+    # df['age'] = (df['age'] - df['lifetime'])
+    # df = df.query('age < 1')
+    # df['age'] = df['age'] % (1e-5) # Evolve magnetars for 10,000 years
+    # df['lifetime'] = 0
+    # print('Number of remnants:', len(df))
+    # print('Number of magnetars:', len(df)*1e-5*0.5*1e3)
 
-    print('Number of remnants:', len(df))
-    print('Number of magnetars:', len(df)*1e-5*0.5*1e3)
-
-    # # Normal
-    # df['velocity'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1))
-    # df = calculate_orbits(df, duration=1e-3)
-    # df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-
-    # Sections
+    # If data is sufficiently large it is split into sections to cope with memory restrictions
     sections = 3
     section_length = len(df)//sections + 1
     section_dfs = [df.iloc[i*section_length:(i+1)*section_length].copy() for i in range(sections)]
@@ -288,9 +249,4 @@ if __name__ == '__main__':
 
     print('Total sources:', len(df))
 
-    # df.to_csv('../kicked_remnants_no_kick_integrated.csv')
-    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_integrated.csv')
-    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_integrated_final.csv')
-    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN.csv')
-    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_peter_{cut}myr.csv')
-    df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_magnetars.csv')
+    df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN.csv')

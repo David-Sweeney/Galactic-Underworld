@@ -14,6 +14,7 @@ import copy
 NUMBER_OF_STARS = None
 
 def load_data(filename, min_mass=0, max_mass=np.inf, distance=np.inf, number_of_stars=None, df=False, verbose=0):
+    '''Load data in from csv or ebf file'''
     if filename.endswith('.csv'):
         data = pd.read_csv(filename)
         if df:
