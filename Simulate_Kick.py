@@ -160,7 +160,28 @@ def get_final_locations(df, timesteps):
     return final_args
 
 def calculate_orbits(df, duration=None):
-    '''Calculate the orbit of each remnant in df'''
+    """
+    Calculates the orbit of each remnant in the provided DataFrame.
+
+    By default the orbits are calculated for a duration based on the age of the
+    star but with the lifetime of the original star subtracted (so they are
+    evolved for the duration of the remnants life). If a duration is specified
+    then all remnants are evolved for this period of time (value is assumed to
+    be in Gyr). 
+
+    Parameters
+    ---------
+    df : DataFrame
+        pandas DataFrame containing the information on the remnants being evolved
+    duration : int (optional)
+        The duration (in Gyr) for which to calculate orbits
+
+    Returns
+    ----------
+    DataFrame
+        pandas DataFrame containing the updated remnants with their evolved
+        positions
+    """
     ro, vo = 8.0, 232.0
     remnant_starts = np.array(df[['R', 'vR', 'vT', 'pz', 'vz', 'phi']])
     conversion_to_natural_units = np.array([ro, vo, vo, ro, vo, 1])
