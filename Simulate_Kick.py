@@ -167,7 +167,7 @@ def calculate_orbits(df, duration=None):
     star but with the lifetime of the original star subtracted (so they are
     evolved for the duration of the remnants life). If a duration is specified
     then all remnants are evolved for this period of time (value is assumed to
-    be in Gyr). 
+    be in Gyr).
 
     Parameters
     ---------
@@ -232,42 +232,61 @@ extinct_filename = r'galaxia_f1e-3_bhm2.35.ebf' # Folder location is taken care 
 np.random.seed(0)
 
 if __name__ == '__main__':
-    df = load_data(extinct_filename)
-    df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-    df = add_kicks(df, half=False, verbose=1)
-    df = update_cylindrical_coords(df)
-    df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-    df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
+    # df = load_data(extinct_filename)
+    # df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+    # df = add_kicks(df, half=False, verbose=1)
+    # df = update_cylindrical_coords(df)
+    # df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv', index=False)
+    #
+    # # for cut in [1, 10, 25, 50, 100, 200]:
+    # df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
+    #
+    # # # For recent galaxy
+    # # df = df.query('age < 2')
+    # # df['age'] = (df['age'] - df['lifetime']) % (cut*1e-3)
+    #
+    # # # Work around to calculate magnetar statistics
+    # # df['age'] = (df['age'] - df['lifetime'])
+    # # df = df.query('age < 1')
+    # # df['age'] = df['age'] % (1e-5) # Evolve magnetars for 10,000 years
+    # # df['lifetime'] = 0
+    # # print('Number of remnants:', len(df))
+    # # print('Number of magnetars:', len(df)*1e-5*0.5*1e3)
+    #
+    # # If data is sufficiently large it is split into sections to cope with memory restrictions
+    # sections = 3
+    # section_length = len(df)//sections + 1
+    # section_dfs = [df.iloc[i*section_length:(i+1)*section_length].copy() for i in range(sections)]
+    # for i in range(sections):
+    #     print('*'*20)
+    #     print(f'Dataframe {i+1}/{sections}')
+    #     section_dfs[i].loc[:, 'velocity'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1))
+    #     section_dfs[i] = calculate_orbits(section_dfs[i])
+    #     # section_dfs[i] = calculate_orbits(section_dfs[i], duration=cut*1e-3)
+    #     section_dfs[i].loc[:, 'will_escape'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014,
+    #                                                                                                                              np.sqrt(np.sum(section_dfs[i].loc[:, ['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+    # df = pd.concat(section_dfs)
+    #
+    # print('Total sources:', len(df))
+    #
+    # df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN.csv', index=False)
 
-    # for cut in [1, 10, 25, 50, 100, 200]:
-    df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_final_ECSN.csv')
+    ### Evolve data for 200 year intervals
+    df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN.csv')
+    for j in range(200, 20001, 200):
+        # If data is sufficiently large it is split into sections to cope with memory restrictions
+        sections = 1
+        section_length = len(df)//sections + 1
+        section_dfs = [df.iloc[i*section_length:(i+1)*section_length].copy() for i in range(sections)]
+        for i in range(sections):
+            print('*'*20)
+            print(f'Dataframe {i+1}/{sections}')
+            section_dfs[i].loc[:, 'velocity'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1))
+            section_dfs[i] = calculate_orbits(section_dfs[i], duration=200*1e-9)
+            section_dfs[i].loc[:, 'will_escape'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014,
+                                                                                                                                     np.sqrt(np.sum(section_dfs[i].loc[:, ['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+        df = pd.concat(section_dfs)
 
-    # # For recent galaxy
-    # df = df.query('age < 2')
-    # df['age'] = (df['age'] - df['lifetime']) % (cut*1e-3)
 
-    # # Work around to calculate magnetar statistics
-    # df['age'] = (df['age'] - df['lifetime'])
-    # df = df.query('age < 1')
-    # df['age'] = df['age'] % (1e-5) # Evolve magnetars for 10,000 years
-    # df['lifetime'] = 0
-    # print('Number of remnants:', len(df))
-    # print('Number of magnetars:', len(df)*1e-5*0.5*1e3)
-
-    # If data is sufficiently large it is split into sections to cope with memory restrictions
-    sections = 3
-    section_length = len(df)//sections + 1
-    section_dfs = [df.iloc[i*section_length:(i+1)*section_length].copy() for i in range(sections)]
-    for i in range(sections):
-        print('*'*20)
-        print(f'Dataframe {i+1}/{sections}')
-        section_dfs[i].loc[:, 'velocity'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1))
-        section_dfs[i] = calculate_orbits(section_dfs[i])
-        # section_dfs[i] = calculate_orbits(section_dfs[i], duration=cut*1e-3)
-        section_dfs[i].loc[:, 'will_escape'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014,
-                                                                                                                                 np.sqrt(np.sum(section_dfs[i].loc[:, ['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-    df = pd.concat(section_dfs)
-
-    print('Total sources:', len(df))
-
-    df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN.csv')
+        df.to_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN+{j}.csv', index=False)
