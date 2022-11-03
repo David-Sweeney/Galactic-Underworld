@@ -189,9 +189,15 @@ def calculate_orbits(df, duration=None):
     # units = [u.kpc, u.km/u.s, u.km/u.s, u.kpc, u.km/u.s, u.radian]
 
     if duration is not None:
-        timesteps = np.arange(0, duration + 1e-4, 1e-4)*u.Gyr
+        if duration < 1e-3:
+            # Ensure that for small durations there are at least 10 steps
+            step = duration / 10
+            timesteps = np.arange(0, duration + step, step)*u.Gyr
+        else:
+            # Else the step size is set to 100,000 years
+            timesteps = np.arange(0, duration + 1e-4, 1e-4)*u.Gyr
     else:
-        # timesteps = np.linspace(0, df['age'].max(), 10000)*u.Gyr
+        # Step size is set to 1 million years
         timesteps = np.arange(0, df['age'].max() + 1e-3, 1e-3)*u.Gyr
     orbit_values = []
     step = 512
