@@ -89,7 +89,7 @@ class NatalKick:
         return w * self.maxwellian(v, sigma_1) + (1 - w) * self.maxwellian(v, sigma_2)
     
     def calculate_max_pdf(self):
-        """Calculates the maximum value of the PDF, setting the class variable"""
+        """Calculates the maximum value of the PDF"""
 
         xs = np.linspace(0, self.max_velocity, 1000)
         ys = self.PDF(xs, black_hole=False)
@@ -103,8 +103,9 @@ class NatalKick:
             black_hole = True
             
         focused_xs = np.linspace(xs[largest_prob_index-1], xs[largest_prob_index+1], 1000)
-        self.max_pdf = PDF(focused_xs, black_hole=black_hole).max()
+        max_pdf = self.PDF(focused_xs, black_hole=black_hole).max()
         # print(f'Maximum value of PDF: {MAX_PDF:.5f}')
+        return max_pdf
     
     def determine_ECSN(self, v, black_hole=False):
         '''Returns True if the kick is from an ECSN'''
