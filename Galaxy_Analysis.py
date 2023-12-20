@@ -1,15 +1,17 @@
-import ebf
+import copy
+
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import pandas as pd
-from kick_utils import kick_distribution, get_kick_distribution_uncertainties
 from scipy.stats.kde import gaussian_kde
 from scipy.optimize import curve_fit
 from sklearn.neighbors import KernelDensity
-import copy
+import ebf
+
+from kick_utils import kick_distribution, get_kick_distribution_uncertainties
 
 NUMBER_OF_STARS = None
 
@@ -283,6 +285,27 @@ def plot_data(style='split', args=[], subplot=0):
             image = get_galactic_density_sk(kde, [-x_lim, x_lim], [-y_lim, y_lim], x_points=800)
 
             vmax = 3e-2
+        elif 'bh_stellar' in args:
+            # Make a contour plot of BHs vs alive galaxy
+            filename += '_bh_stellar'
+            args.remove('bh_stellar')
+
+            kde.fit(stellar_coords[:, [0, 2]])
+            stellar_z = get_galactic_density_sk(
+                kde, [0, x_lim], [-y_lim, y_lim])
+
+            df_black_holes = df_extinct[df_extinct['rtype'] == 'Black Hole']
+            
+            # Fit KDE
+            kde.fit(df_black_holes[['px', 'pz']].to_numpy())
+            # vmax = 5e-2
+
+            # extinct_z = get_galactic_density(extinct_kde, [-x_lim, 0], [-y_lim, y_lim])
+            black_hole_z = get_galactic_density_sk(
+                kde, [-x_lim, 0], [-y_lim, y_lim])
+            left_text = 'Black Holes'
+            right_text = 'Visible Stars'
+            image = np.hstack((black_hole_z, stellar_z))
         else:
             # Make a contour plot of remnants vs alive galaxy
             # stellar_kde = gaussian_kde(stellar_coords[:, [0, 2]].T, bw_method=bandwidth)
@@ -995,7 +1018,6 @@ def create_subplots(subplot = 'speed_histogram'):
         raise ValueError(f'Unknown subplot: {subplot}')
     kicked_filename, raw_kicked_filename = old_kicked, old_raw
 
-
 # kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated.csv'
 # kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_2.csv'
 kicked_filename = r'../kicked_remnants_igoshev_young_7.8_DC_integrated_final.csv'
@@ -1050,6 +1072,7 @@ kicked = True
 # plot_data(style='contour', args=[20, 'lines', 'type', 'unkicked'])
 # plot_data(style='contour', args=[20, 'type', 'velocity'])
 # plot_data(style='contour', args=[20, 'type', 'unkicked', 'lines'])
+plot_data(style='contour', args=[20, 'bh_stellar', 'lines'])
 
 # plot_data(style='bar', args=[])
 # plot_data(style='bar', args=['R'])
