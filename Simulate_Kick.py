@@ -34,7 +34,7 @@ def load_data(filename, filter=True):
     useful_data = np.array(useful_data).T
     df = pd.DataFrame(useful_data, columns=keys)
 
-    # Convert age to giga-years
+    # Convert age to gigayears
     df['age'] = 10**df['age'] / 10**9
 
     df = calculate_lifetimes(df)
@@ -174,8 +174,6 @@ def calculate_orbits(df, duration=None):
     orbit_values *= conversion_to_natural_units
     print('Finished vstacking')
     
-    np.savez('orbit_values.npz', orbit_values=orbit_values)
-
     if duration is not None:
         df[['R', 'vR', 'vT', 'pz', 'vz', 'phi']] = orbit_values[:, -1]
     else:
@@ -185,37 +183,40 @@ def calculate_orbits(df, duration=None):
     return update_cartestian_coordinates(df)
 
 if __name__ == '__main__':
-    distribution = 'igoshev_young'
-    bh_kicks = 'Scaled'
-    natal_kicks = NatalKick(distribution=distribution, bh_kicks=bh_kicks)
-    # extinct_filename = r'galaxia_f1e-4_bhm2.35.ebf'
-    extinct_filename = r'../galaxia_f1e-3_bhm2.35.ebf' # Folder location is taken care of in the loading of this file
-    output_filename = f'../kicked_remnants_{distribution}_7.8_DC_{bh_kicks}'
-    np.random.seed(0)
-    
-    
-    df = load_data(extinct_filename)
-    df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-    df = add_kicks(df, natal_kicks=natal_kicks, verbose=1)
-    df = update_cylindrical_coords(df)
-    df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-    df.to_csv(f'{output_filename}.csv', index=False)
-
-    sections = 3
-    section_length = len(df)//sections + 1
-    section_dfs = [df.iloc[i*section_length:(i+1)*section_length].copy() for i in range(sections)]
-    for i in range(sections):
-        print('*'*20)
-        print(f'Dataframe {i+1}/{sections}')
-        section_dfs[i].loc[:, 'velocity'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1))
-        section_dfs[i] = calculate_orbits(section_dfs[i])
-        section_dfs[i].loc[:, 'will_escape'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014,
-                                                                                                                                np.sqrt(np.sum(section_dfs[i].loc[:, ['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-    df = pd.concat(section_dfs)
+    # distribution = 'igoshev_young'
+    distribution = 'popsycle'
+    # bh_kicks = 'Equal'
+    for bh_kicks in ['Equal']:
+        natal_kicks = NatalKick(distribution=distribution, bh_kicks=bh_kicks)
+        # extinct_filename = r'galaxia_f1e-4_bhm2.35.ebf'
+        extinct_filename = r'../galaxia_f1e-3_bhm2.35.ebf' # Folder location is taken care of in the loading of this file
+        output_filename = f'../kicked_remnants_{distribution}_7.8_DC_{bh_kicks}'
+        np.random.seed(0)
         
-    print('Total sources:', len(df))
-    
-    df.to_csv(f'{output_filename}_integrated.csv', index=False)
+        
+        df = load_data(extinct_filename)
+        df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+        df = add_kicks(df, natal_kicks=natal_kicks, verbose=1)
+        df = update_cylindrical_coords(df)
+        df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+        df.to_csv(f'{output_filename}.csv', index=False)
+
+        # # Data must be split into sections to cope with memory restrictions
+        # sections = 10 # Minimum 3 for full run
+        # section_length = len(df)//sections + 1
+        # section_dfs = [df.iloc[i*section_length:(i+1)*section_length].copy() for i in range(sections)]
+        # for i in range(sections):
+        #     print('*'*20)
+        #     print(f'Dataframe {i+1}/{sections}')
+        #     section_dfs[i].loc[:, 'velocity'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1))
+        #     section_dfs[i] = calculate_orbits(section_dfs[i])
+        #     section_dfs[i].loc[:, 'will_escape'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014,
+        #                                                                                                                             np.sqrt(np.sum(section_dfs[i].loc[:, ['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+        # df = pd.concat(section_dfs)
+            
+        # print('Total sources:', len(df))
+        
+        # df.to_csv(f'{output_filename}_integrated.csv', index=False)
 
     # ### Evolve data for 200 year intervals
     # df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN.csv')

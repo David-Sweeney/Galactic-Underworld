@@ -17,7 +17,7 @@ class NatalKick:
                 'Equal': Set black hole kicks to have the same velocity as neutron star kicks.
         """
         
-        assert distribution in ['igoshev_all', 'igoshev_young', 'renzo', 'hobbs'], \
+        assert distribution in ['igoshev_all', 'igoshev_young', 'renzo', 'hobbs', 'popsycle'], \
             f'Unknown distribution: {distribution}'
         assert bh_kicks in ['Zero', 'Scaled', 'Equal'], \
             f'Unknown bh_kicks option: {bh_kicks}'
@@ -25,11 +25,13 @@ class NatalKick:
         self.distribution = distribution
         self.bh_kicks = bh_kicks
         
-        # Maximum velocity in km/s to sample from the PDF
-        self.max_velocity = 1500
-        
-        # Maximum value of the PDF
-        self.max_pdf = self.calculate_max_pdf()
+        # Kick PDF has to be sampled if not using the Popsycle distribution
+        if self.distribution != 'popsycle':
+            # Maximum velocity in km/s to sample from the PDF
+            self.max_velocity = 1500
+            
+            # Maximum value of the PDF
+            self.max_pdf = self.calculate_max_pdf()
     
     def maxwellian(self, v, sigma):
         """Maxwellian PDF"""
@@ -83,15 +85,17 @@ class NatalKick:
         # If the kick is for a black hole, it is never from an ECSN (i.e. the sigma_1 peak)
         if black_hole:
             return self.maxwellian(v, sigma_2)
+        
         # Return the PDF value of the ECSN peak
         if ECSN:
             return w*self.maxwellian(v, sigma_1)
+        
         return w * self.maxwellian(v, sigma_1) + (1 - w) * self.maxwellian(v, sigma_2)
     
     def calculate_max_pdf(self):
         """Calculates the maximum value of the PDF"""
 
-        xs = np.linspace(0, self.max_velocity, 1000)
+        xs = np.linspace(0, self.max_velocity, 10000)
         ys = self.PDF(xs, black_hole=False)
         y_bhs = self.PDF(xs, black_hole=True)
 
@@ -110,7 +114,7 @@ class NatalKick:
     def determine_ECSN(self, v, black_hole=False):
         '''Returns True if the kick is from an ECSN'''
         # BHs can't be formed by ECSN
-        if black_hole:
+        if black_hole or self.distribution == 'popsycle':
             return False
         
         chance_ECSN = self.PDF(v, ECSN=True) / self.PDF(v)
@@ -157,6 +161,12 @@ class NatalKick:
             natal_kick = 0
         else:
             natal_kick = None
+        
+        if self.distribution == 'popsycle':
+            if black_hole:
+                natal_kick = 100
+            else:
+                natal_kick = 350
             
         while natal_kick is None:
             v = np.random.uniform(0, self.max_velocity)
@@ -168,7 +178,7 @@ class NatalKick:
         ECSN = self.determine_ECSN(natal_kick, black_hole)
         
         # Scale BH kicks to have same momentum as NS kicks
-        if self.bh_kicks == 'Scaled':
+        if black_hole and self.bh_kicks == 'Scaled':
             # Assumes NS mass is 1.35 Msun and BH mass is 7.8 Msun
             natal_kick *= 0.173
 
