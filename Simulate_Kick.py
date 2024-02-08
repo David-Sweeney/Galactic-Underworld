@@ -10,6 +10,7 @@ from galpy.orbit import Orbit
 from galpy.util.conversion import get_physical
 from astropy import units as u
 from kick import NatalKick
+from mass import Mass
 
 def calculate_lifetimes(df):
     '''
@@ -57,24 +58,21 @@ def load_data(filename, filter=True):
         df = df[df['smass'] > 8]
     return df
 
+def add_masses(df, masses):
+    '''Add mass to each entry of the DataFrame'''
+    for i in df.index.values:
+        df.loc[i, 'mass'] = masses.get_mass(df.loc[i, 'rtype'])
+    return df
+
 def add_kicks(df, natal_kicks, verbose=0):
     '''Add kick to each entry of the DataFrame'''
     for prog, i in enumerate(df.index.values):
         if verbose and prog % (df.shape[0]//100) == 0:
             print(f'Creating kicks, progress = {100 * prog / df.shape[0]:.0f}%')
 
-        remnant_type = df.loc[i, 'rtype']
-        if remnant_type == 'White Dwarf':
-            continue
-        elif remnant_type == 'Neutron Star':
-            vx, vy, vz, ECSN = natal_kicks.get_kick(black_hole=False)
-        elif remnant_type == 'Black Hole':
-            vx, vy, vz, ECSN = natal_kicks.get_kick(black_hole=True, heavy=df.loc[i, 'smass'] > 40)
-        else:
-            raise ValueError(f'Unknown remnant type: {remnant_type}')
+        vx, vy, vz = natal_kicks.get_kick(df.loc[i, 'rtype'], df.loc[i, 'mass'], df.loc[i, 'smass'])
 
         df.loc[i, ['vx', 'vy', 'vz']] += np.array([vx, vy, vz])
-        df.loc[i, 'ECSN'] = ECSN
 
     return df
 
@@ -183,40 +181,40 @@ def calculate_orbits(df, duration=None):
     return update_cartestian_coordinates(df)
 
 if __name__ == '__main__':
-    # distribution = 'igoshev_young'
-    distribution = 'popsycle'
-    # bh_kicks = 'Equal'
-    for bh_kicks in ['Equal']:
-        natal_kicks = NatalKick(distribution=distribution, bh_kicks=bh_kicks)
-        # extinct_filename = r'galaxia_f1e-4_bhm2.35.ebf'
-        extinct_filename = r'../galaxia_f1e-3_bhm2.35.ebf' # Folder location is taken care of in the loading of this file
-        output_filename = f'../kicked_remnants_{distribution}_7.8_DC_{bh_kicks}'
-        np.random.seed(0)
-        
-        
-        df = load_data(extinct_filename)
-        df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-        df = add_kicks(df, natal_kicks=natal_kicks, verbose=1)
-        df = update_cylindrical_coords(df)
-        df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-        df.to_csv(f'{output_filename}.csv', index=False)
+    natal_kicks = NatalKick(distributions={'Black Hole': 'scaled igoshev young', 
+                                           'Neutron Star': 'igoshev young'})
+    masses = Mass(distributions={'Black Hole': 7.8, 'Neutron Star': 1.35})
+    
+    # extinct_filename = r'galaxia_f1e-4_bhm2.35.ebf'
+    extinct_filename = r'../galaxia_f1e-3_bhm2.35.ebf' # Folder location is taken care of in the loading of this file
+    output_filename = f'../kicked_remnants_{distribution}_7.8_DC_{bh_kicks}'
+    np.random.seed(0)
+    
+    
+    df = load_data(extinct_filename)
+    df = add_masses(df, masses)
+    df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+    df = add_kicks(df, natal_kicks=natal_kicks, verbose=1)
+    df = update_cylindrical_coords(df)
+    df['will_escape'] = np.sqrt(np.sum(df[['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014, np.sqrt(np.sum(df[['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+    df.to_csv(f'{output_filename}.csv', index=False)
 
-        # # Data must be split into sections to cope with memory restrictions
-        # sections = 10 # Minimum 3 for full run
-        # section_length = len(df)//sections + 1
-        # section_dfs = [df.iloc[i*section_length:(i+1)*section_length].copy() for i in range(sections)]
-        # for i in range(sections):
-        #     print('*'*20)
-        #     print(f'Dataframe {i+1}/{sections}')
-        #     section_dfs[i].loc[:, 'velocity'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1))
-        #     section_dfs[i] = calculate_orbits(section_dfs[i])
-        #     section_dfs[i].loc[:, 'will_escape'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014,
-        #                                                                                                                             np.sqrt(np.sum(section_dfs[i].loc[:, ['px', 'py', 'pz']]**2, axis=1))/8.0)*232
-        # df = pd.concat(section_dfs)
-            
-        # print('Total sources:', len(df))
+    # # Data must be split into sections to cope with memory restrictions
+    # sections = 10 # Minimum 3 for full run
+    # section_length = len(df)//sections + 1
+    # section_dfs = [df.iloc[i*section_length:(i+1)*section_length].copy() for i in range(sections)]
+    # for i in range(sections):
+    #     print('*'*20)
+    #     print(f'Dataframe {i+1}/{sections}')
+    #     section_dfs[i].loc[:, 'velocity'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1))
+    #     section_dfs[i] = calculate_orbits(section_dfs[i])
+    #     section_dfs[i].loc[:, 'will_escape'] = np.sqrt(np.sum(section_dfs[i].loc[:, ['vx', 'vy', 'vz']]**2, axis=1)) >= potential.vesc(MWPotential2014,
+    #                                                                                                                             np.sqrt(np.sum(section_dfs[i].loc[:, ['px', 'py', 'pz']]**2, axis=1))/8.0)*232
+    # df = pd.concat(section_dfs)
         
-        # df.to_csv(f'{output_filename}_integrated.csv', index=False)
+    # print('Total sources:', len(df))
+    
+    # df.to_csv(f'{output_filename}_integrated.csv', index=False)
 
     # ### Evolve data for 200 year intervals
     # df = pd.read_csv(f'../kicked_remnants_{DISTRIBUTION}_7.8_DC_integrated_final_ECSN.csv')

@@ -16,22 +16,12 @@ class Mass():
         
         self.string_representation = str(distributions)
         self.distributions = distributions
-        self.expected_masses = {species: self._get_expected_mass(species) for species in distributions}
     
     def get_mass(self, species):
         if isinstance(self.distributions[species], (int, float)):
             return distributions[species]
         elif callable(self.distributions[species]):
             return float(self.distributions[species]())
-        else:
-            raise ValueError('Mass distribution for {species} not understood.')
-    
-    def _get_expected_mass(self, species):
-        if isinstance(self.distributions[species], (int, float)):
-            return distributions[species]
-        elif callable(self.distributions[species]):
-            masses = [float(self.distributions[species]()) for _ in range(10000)]
-            return np.mean(masses)
         else:
             raise ValueError('Mass distribution for {species} not understood.')
     
