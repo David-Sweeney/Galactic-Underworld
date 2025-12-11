@@ -622,7 +622,7 @@ def plot_data(style='split', args=[], subplot=0):
             bin_range = (0, bin_max)
             bin_edges = None
             results = []
-            zs_list = [np.abs(df_bh['pz']), np.abs(df_ns['pz']), np.abs(stellar_coords[:, 2]), np.abs(df_guw_unkicked['pz']), np.abs(df_renzo['pz'])]
+            zs_list = [np.abs(stellar_coords[:, 2]), np.abs(df_ns['pz']), np.abs(df_bh['pz']), np.abs(df_guw_unkicked['pz']), np.abs(df_renzo['pz'])]
 
             if 'hobbs' in args:
                 filename += '_hobbs'
@@ -636,7 +636,7 @@ def plot_data(style='split', args=[], subplot=0):
 
             for zs in zs_list:
                 if bin_edges is None:
-                    z_result, bin_edges = np.histogram(zs, bins='auto', range=bin_range, density=True)
+                    z_result, bin_edges = np.histogram(zs, bins=45, range=bin_range, density=True)
                 else:
                     z_result, _ = np.histogram(zs, bins=bin_edges, range=bin_range, density=True)
                 results.append(z_result)
@@ -1006,7 +1006,6 @@ def create_subplots(subplot = 'speed_histogram'):
         print('Saving Galactic_Underworld_speed_histograms_for_peter_1-200myr_filter')
         plt.savefig('../Galactic_Underworld_speed_histograms_for_peter_1-200myr_filter.pdf')
         plt.savefig('../Galactic_Underworld_speed_histograms_for_peter_1-200myr_filter.png', dpi=512)
-
     elif subplot == 'hobbs':
         kicked_filename = hobbs_filename
         plot_data(style='contour', args=[20, 'type', 'lines'], subplot=111)
